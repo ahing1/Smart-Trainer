@@ -1,4 +1,4 @@
-from models.database import workouts_collection
+from models.db import workouts_collection
 from bson.objectid import ObjectId
 
 def log_workout(user_id, exercise, sets, reps, weight):
