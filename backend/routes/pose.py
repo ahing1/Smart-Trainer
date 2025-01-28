@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 import cv2
 import numpy as np
 from models.pose_estimation import estimate_pose
+from models.pose_analysis import analyze_pose_keypoints
 
 pose_bp = Blueprint("pose", __name__)
 
@@ -22,5 +23,7 @@ def analyze_pose():
 
     # Perform pose estimation
     keypoints = estimate_pose(image)
+    
+    feedback = analyze_pose_keypoints(keypoints)
 
-    return jsonify({"keypoints": keypoints}), 200
+    return jsonify({"keypoints": keypoints, "feedback": feedback}), 200

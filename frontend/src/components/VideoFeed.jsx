@@ -3,23 +3,22 @@ import Webcam from "react-webcam";
 import {API} from "../services/api";
 
 const VideoFeed = () => {
-  const webcamRef = useRef(null); // Reference to the webcam
-  const [feedback, setFeedback] = useState(null); // Store pose feedback
+  const webcamRef = useRef(null);
+  const [feedback, setFeedback] = useState([]);
+  const [keypoints, setKeypoints] = useState([]);
 
-  // Capture a frame from the webcam and send it to the backend
   const captureFrame = useCallback(async () => {
     if (webcamRef.current) {
-      const imageSrc = webcamRef.current.getScreenshot(); // Capture a frame as base64
-      try {
-        // Convert base64 image to blob
-        const blob = await fetch(imageSrc).then((res) => res.blob());
+      const imageSrc = webcamRef.current.getScreenshot();
 
-        // Create FormData and send to backend
+      try {
+        const blob = await fetch(imageSrc).then((res) => res.blob());
         const formData = new FormData();
         formData.append("file", blob, "frame.jpg");
 
         const response = await API.post("/analyze_pose", formData);
-        setFeedback(response.data.keypoints); // Update feedback with keypoints
+        setKeypoints(response.data.keypoints); // Update keypoints
+        setFeedback(response.data.feedback); // Update feedback messages
       } catch (error) {
         console.error("Error analyzing pose:", error);
       }
@@ -34,12 +33,13 @@ const VideoFeed = () => {
         alignItems: "center",
         justifyContent: "center",
         height: "100vh",
-        backgroundColor: "#f8f9fa", // Light background for contrast
-        textAlign: "center",
+        backgroundColor: "#f8f9fa",
       }}
     >
+      <h1 style={{ marginBottom: "20px", fontSize: "2rem", color: "#343a40" }}>
+        Smart Personal Trainer
+      </h1>
 
-      {/* Webcam container */}
       <div
         style={{
           position: "relative",
@@ -61,8 +61,7 @@ const VideoFeed = () => {
           }}
         />
 
-        {/* Overlay for feedback */}
-        {feedback && (
+        {keypoints && (
           <div
             style={{
               position: "absolute",
@@ -72,7 +71,7 @@ const VideoFeed = () => {
               height: "100%",
             }}
           >
-            {feedback.map((keypoint) => (
+            {keypoints.map((keypoint) => (
               <div
                 key={keypoint.id}
                 style={{
@@ -91,7 +90,6 @@ const VideoFeed = () => {
         )}
       </div>
 
-      {/* Analyze Pose button */}
       <button
         onClick={captureFrame}
         style={{
@@ -103,11 +101,25 @@ const VideoFeed = () => {
           border: "none",
           borderRadius: "5px",
           cursor: "pointer",
-          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
         }}
       >
         Analyze Pose
       </button>
+
+      <div style={{ marginTop: "20px", textAlign: "center", width: "80%" }}>
+        <h2>Feedback:</h2>
+        {feedback.length > 0 ? (
+          <ul>
+            {feedback.map((msg, index) => (
+              <li key={index} style={{ color: "green", fontWeight: "bold" }}>
+                {msg}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No feedback yet. Perform an exercise to see feedback.</p>
+        )}
+      </div>
     </div>
   );
 };
