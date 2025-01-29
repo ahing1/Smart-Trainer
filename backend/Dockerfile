@@ -1,18 +1,23 @@
-# Use a lightweight Python image
-FROM python:3.9-slim
+# Use an official Python image
+FROM python:3.10
 
 # Set the working directory
 WORKDIR /app
 
-# Copy requirements and install dependencies
+# Install system dependencies required for OpenCV
+RUN apt-get update && apt-get install -y \
+    libgl1-mesa-glx \
+    libglib2.0-0
+
+# Copy the requirements file and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire backend directory
+# Copy the application code
 COPY . .
 
-# Expose the Flask app port
+# Expose the port the backend runs on
 EXPOSE 5000
 
-# Command to run the app
+# Run the Flask app
 CMD ["python", "app.py"]
