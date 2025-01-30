@@ -1,14 +1,26 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import {API} from "../services/api";
 
 const VideoFeed = () => {
   const webcamRef = useRef(null);
-  const [feedback, setFeedback] = useState([]);
   const [keypoints, setKeypoints] = useState([]);
+  const [feedback, setFeedback] = useState([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const captureFrame = useCallback(async () => {
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!isProcessing) {
+        captureFrame();
+      }
+    }, 2000); // Capture frame every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [isProcessing]); // Run only when `isProcessing` state changes
+
+  const captureFrame = async () => {
     if (webcamRef.current) {
+      setIsProcessing(true); // Prevent multiple concurrent API calls
       const imageSrc = webcamRef.current.getScreenshot();
 
       try {
@@ -17,13 +29,14 @@ const VideoFeed = () => {
         formData.append("file", blob, "frame.jpg");
 
         const response = await API.post("/analyze_pose", formData);
-        setKeypoints(response.data.keypoints); // Update keypoints
-        setFeedback(response.data.feedback); // Update feedback messages
+        setKeypoints(response.data.keypoints);
+        setFeedback(response.data.feedback);
       } catch (error) {
         console.error("Error analyzing pose:", error);
       }
+      setIsProcessing(false);
     }
-  }, [webcamRef]);
+  };
 
   return (
     <div
@@ -37,9 +50,10 @@ const VideoFeed = () => {
       }}
     >
       <h1 style={{ marginBottom: "20px", fontSize: "2rem", color: "#343a40" }}>
-        Smart Personal Trainer
+        Smart Personal Trainer (Real-Time)
       </h1>
 
+      {/* Webcam Feed */}
       <div
         style={{
           position: "relative",
@@ -61,6 +75,7 @@ const VideoFeed = () => {
           }}
         />
 
+        {/* Pose Keypoints Overlay */}
         {keypoints && (
           <div
             style={{
@@ -90,22 +105,7 @@ const VideoFeed = () => {
         )}
       </div>
 
-      <button
-        onClick={captureFrame}
-        style={{
-          marginTop: "20px",
-          padding: "10px 20px",
-          fontSize: "1rem",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        Analyze Pose
-      </button>
-
+      {/* Feedback Section */}
       <div style={{ marginTop: "20px", textAlign: "center", width: "80%" }}>
         <h2>Feedback:</h2>
         {feedback.length > 0 ? (
@@ -117,7 +117,7 @@ const VideoFeed = () => {
             ))}
           </ul>
         ) : (
-          <p>No feedback yet. Perform an exercise to see feedback.</p>
+          <p>No feedback yet. Performing analysis...</p>
         )}
       </div>
     </div>
