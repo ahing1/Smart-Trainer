@@ -10,7 +10,6 @@ const VideoFeed = () => {
 
   useEffect(() => {
     const runPoseDetection = async () => {
-      // Load MoveNet model
       const detector = await poseDetection.createDetector(
         poseDetection.SupportedModels.MoveNet,
         { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
@@ -28,7 +27,7 @@ const VideoFeed = () => {
         }
       }, 200);
 
-      return () => clearInterval(interval); // Cleanup on unmount
+      return () => clearInterval(interval);
     };
 
     runPoseDetection();
@@ -42,13 +41,52 @@ const VideoFeed = () => {
     const rightHip = keypoints.find((kp) => kp.name === "right_hip");
     const leftKnee = keypoints.find((kp) => kp.name === "left_knee");
     const rightKnee = keypoints.find((kp) => kp.name === "right_knee");
+    const leftShoulder = keypoints.find((kp) => kp.name === "left_shoulder");
+    const rightShoulder = keypoints.find((kp) => kp.name === "right_shoulder");
+    const leftElbow = keypoints.find((kp) => kp.name === "left_elbow");
+    const rightElbow = keypoints.find((kp) => kp.name === "right_elbow");
 
+    /*** SQUAT ANALYSIS ***/
     if (leftHip && rightHip && leftKnee && rightKnee) {
       const avgHipY = (leftHip.y + rightHip.y) / 2;
       const avgKneeY = (leftKnee.y + rightKnee.y) / 2;
 
       if (avgHipY > avgKneeY) {
         feedbackMessages.push("Go lower in your squat for better form.");
+      }
+
+      const kneeDistance = Math.abs(leftKnee.x - rightKnee.x);
+      const hipDistance = Math.abs(leftHip.x - rightHip.x);
+      if (kneeDistance > hipDistance * 1.2) {
+        feedbackMessages.push("Keep your knees aligned with your feet.");
+      }
+    }
+
+    /*** PUSH-UP ANALYSIS ***/
+    if (leftShoulder && rightShoulder && leftElbow && rightElbow) {
+      const avgShoulderY = (leftShoulder.y + rightShoulder.y) / 2;
+      const avgElbowY = (leftElbow.y + rightElbow.y) / 2;
+
+      if (avgShoulderY > avgElbowY) {
+        feedbackMessages.push("Lower yourself more in the push-up.");
+      }
+
+      if (Math.abs(leftElbow.x - rightElbow.x) < 0.1) {
+        feedbackMessages.push("Widen your arms for better push-up form.");
+      }
+    }
+
+    /*** POSTURE ANALYSIS (SHOULDER ALIGNMENT) ***/
+    if (leftShoulder && rightShoulder && leftHip && rightHip) {
+      const shoulderAlignment = Math.abs(leftShoulder.y - rightShoulder.y);
+      const hipAlignment = Math.abs(leftHip.y - rightHip.y);
+
+      if (shoulderAlignment > 0.05) {
+        feedbackMessages.push("Keep your shoulders level.");
+      }
+
+      if (hipAlignment > 0.05) {
+        feedbackMessages.push("Keep your hips balanced.");
       }
     }
 
