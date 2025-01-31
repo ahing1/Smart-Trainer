@@ -1,15 +1,12 @@
-from models.db import workouts_collection
+from models.db import db
 from bson.objectid import ObjectId
+import datetime
+
+workouts_collection = db["workouts"]
 
 def log_workout(user_id, exercise, sets, reps, weight):
     """
-    Log a workout in the database.
-    :param user_id: ID of the user logging the workout.
-    :param exercise: Name of the exercise.
-    :param sets: Number of sets.
-    :param reps: Number of reps.
-    :param weight: Weight used for the exercise.
-    :return: The inserted workout's ID.
+    Log a new workout session into the database.
     """
     workout = {
         "user_id": user_id,
@@ -17,18 +14,17 @@ def log_workout(user_id, exercise, sets, reps, weight):
         "sets": sets,
         "reps": reps,
         "weight": weight,
+        "date": datetime.datetime.utcnow()
     }
     result = workouts_collection.insert_one(workout)
     return str(result.inserted_id)
 
-
-def get_workouts():
+def get_workout_history(user_id):
     """
-    Retrieve all workouts from the database.
-    :return: List of workouts.
+    Retrieve past workout history for a user.
     """
-    workouts = []
-    for workout in workouts_collection.find():
-        workout["_id"] = str(workout["_id"])  # Convert ObjectId to string
-        workouts.append(workout)
+    workouts = list(workouts_collection.find({"user_id": user_id}).sort("date", -1))
+    for workout in workouts:
+        workout["_id"] = str(workout["_id"])
+        workout["date"] = workout["date"].strftime("%Y-%m-%d %H:%M:%S")
     return workouts

@@ -1,32 +1,11 @@
-import React, { useState, useEffect } from "react";
-import WorkoutForm from "./components/WorkoutForm";
-import WorkoutTable from "./components/WorkoutTable";
+import React, { useState } from "react";
 import VideoFeed from "./components/VideoFeed";
-import {API} from "./services/api";
+import WorkoutHistory from "./components/WorkoutHistory";
 
-function App() {
-  const [workouts, setWorkouts] = useState([]);
-
-  // Fetch workouts from the backend
-  useEffect(() => {
-    const fetchWorkouts = async () => {
-      try {
-        const response = await API.get("/workouts");
-        setWorkouts(response.data.workouts);
-      } catch (error) {
-        console.error("Error fetching workouts:", error);
-      }
-    };
-    fetchWorkouts();
-  }, []);
-
-  // Add a new workout to the table
-  const handleWorkoutLogged = (newWorkout) => {
-    setWorkouts((prev) => [...prev, newWorkout]);
-  };
+const App = () => {
+  const [userId] = useState("123"); // Replace with real authentication logic
 
   return (
-    <>
     <div
       style={{
         textAlign: "center",
@@ -35,22 +14,14 @@ function App() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
         padding: "20px",
       }}
     >
-      <h1 style={{ fontSize: "2.5rem", marginBottom: "20px", color: "#343a40" }}>
-        Smart Personal Trainer
-      </h1>
+      <h1>Smart Personal Trainer</h1>
       <VideoFeed />
+      <WorkoutHistory userId={userId} />
     </div>
-    <div style={{ padding: "20px" }}>
-      <h1>Workout Tracker</h1>
-      <WorkoutForm onWorkoutLogged={handleWorkoutLogged} />
-      <WorkoutTable workouts={workouts} />
-    </div>
-    </>
   );
-}
+};
 
 export default App;
