@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {API} from "../services/api";
+import { getAuthHeaders } from "../services/auth";
 
 const WorkoutHistory = ({ userId }) => {
   const [workouts, setWorkouts] = useState([]);
@@ -7,7 +8,7 @@ const WorkoutHistory = ({ userId }) => {
   useEffect(() => {
     const fetchWorkouts = async () => {
       try {
-        const response = await API.get(`/workouts/${userId}`);
+        const response = await API.get("/workouts", { headers: getAuthHeaders() });
         setWorkouts(response.data.workouts);
       } catch (error) {
         console.error("Error fetching workout history:", error);
@@ -15,7 +16,7 @@ const WorkoutHistory = ({ userId }) => {
     };
 
     fetchWorkouts();
-  }, [userId]);
+  }, []);
 
   return (
     <div style={{ marginTop: "20px", width: "80%" }}>

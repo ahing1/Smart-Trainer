@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models.user import create_user, authenticate_user
 
 auth_bp = Blueprint("auth", __name__)
@@ -42,4 +42,5 @@ def protected():
     """
     A protected route requiring authentication.
     """
-    return jsonify({"message": "You are viewing a protected route"}), 200
+    current_user = get_jwt_identity()
+    return jsonify({"message": f"Welcome, {current_user}!"}), 200
