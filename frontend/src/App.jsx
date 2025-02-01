@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import VideoFeed from "./components/VideoFeed";
 import WorkoutHistory from "./components/WorkoutHistory";
+import WorkoutRecommendations from "./components/WorkoutRecommendations";
 
 const App = () => {
   const [userId] = useState("123"); // Replace with real authentication logic
@@ -20,6 +21,7 @@ const App = () => {
       <h1>Smart Personal Trainer</h1>
       <VideoFeed />
       <WorkoutHistory userId={userId} />
+      <WorkoutRecommendations userId={userId} />
     </div>
   );
 };

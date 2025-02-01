@@ -1,32 +1,38 @@
-from models.db import workouts_collection
+from models.db import db
+import datetime
 
-def recommend_exercises(user_id, goal):
+workouts_collection = db["workouts"]
+
+def get_recommendations(user_id):
     """
-    Generate exercise recommendations based on user workout history and goals.
-    :param user_id: ID of the user.
-    :param goal: User's fitness goal (e.g., "strength", "endurance", "weight loss").
-    :return: List of recommended exercises.
+    Generate personalized workout recommendations based on past history.
     """
-    # Define basic exercise categories
-    exercises_by_goal = {
-        "strength": ["Deadlift", "Squat", "Bench Press", "Pull-up"],
-        "endurance": ["Running", "Cycling", "Rowing", "Jump Rope"],
-        "weight_loss": ["HIIT", "Burpees", "Mountain Climbers", "Jumping Jacks"],
-    }
+    # Fetch user workout history (last 5 workouts)
+    past_workouts = list(workouts_collection.find({"user_id": user_id}).sort("date", -1).limit(5))
 
-    # Fetch the user's workout history
-    history = list(workouts_collection.find({"user_id": user_id}))
+    if not past_workouts:
+        return {"message": "No past workouts found. Start logging workouts to receive recommendations!"}
 
-    # Get a count of performed exercises
-    performed_exercises = {}
-    for workout in history:
+    recommended_workouts = []
+
+    # Basic AI logic: Suggest progressive overload (increase reps/weight)
+    for workout in past_workouts:
         exercise = workout["exercise"]
-        performed_exercises[exercise] = performed_exercises.get(exercise, 0) + 1
+        sets = workout["sets"]
+        reps = workout["reps"]
+        weight = workout["weight"]
 
-    # Recommend exercises the user has done less often
-    all_exercises = exercises_by_goal.get(goal, [])
-    recommendations = sorted(
-        all_exercises, key=lambda x: performed_exercises.get(x, 0)
-    )
+        # Increase reps or weight based on history
+        if reps < 12:
+            reps += 2
+        elif weight < 100:  # Simple threshold, can be personalized
+            weight += 5
 
-    return recommendations[:3]  # Return top 3 recommendations
+        recommended_workouts.append({
+            "exercise": exercise,
+            "sets": sets,
+            "reps": reps,
+            "weight": weight
+        })
+
+    return {"recommended_workouts": recommended_workouts}
